@@ -1,0 +1,16 @@
+Sections:
+00: "org0001:200" (200-206)
+
+
+Source: "test1.asm"
+                        	     1:         .org 0x0200
+                        	     2: 
+00:0200 A9F9            	     3:         LDA #0xF9
+00:0202 8D0020          	     4:         STA 0x2000
+                        	     5: 
+00:0205 00              	     6:         BRK
+
+
+Symbols by name:
+
+Symbols by value:

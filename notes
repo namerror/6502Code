@@ -1,0 +1,7 @@
+commands:
+    vasm -Fihex -o test1.hex test1.asm // compile
+    vasm -Fihex -o test1.hex -L test1.lst test1.asm
+
+Assembly code:
+    0x means hex
+    # means immediate
