@@ -1,0 +1,16 @@
+Sections:
+00: "org0001:200" (200-207)
+
+
+Source: "printE.asm"
+                        	     1:     .org 0x0200
+                        	     2: 
+00:0200 D8              	     3:     CLD ;clear decimal mode to prevent error
+00:0201 A945            	     4:     LDA #0x45 ;ASCII hex for character "E"
+00:0203 20A01E          	     5:     JSR 0x1EA0 ;OUTCH
+00:0206 00              	     6:     BRK
+
+
+Symbols by name:
+
+Symbols by value:

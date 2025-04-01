@@ -5,3 +5,6 @@ commands:
 Assembly code:
     0x means hex
     # means immediate
+
+// After compiling the asm file to hex, open Tera Term, set the serial port to 1200 speed and 2 bit stop bits. Then switch to TTY mode on the KIM-1, press reset, and press enter in Tera Term. Once the connection is working, type capital 'L' then paste the hex file in.
+// In TTY mode of the KIM-1, in tera term we can type in the address (0200 for example), and type 'G', the program will run from that address. We can also run the program in KBD mode, in which we only need to run it on the KIM and the output will be shown.
