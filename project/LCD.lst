@@ -1,0 +1,239 @@
+Sections:
+00: "org0001:200" (200-2C7)
+01: "org0002:2000" (2000-2000)
+
+
+Source: "LCD.asm"
+                        	     1: ; Program for MOSI SPI
+                        	     2: 
+                        	     3: .cpu 6502
+                        	     4: .equ outputKIM, 0x1700 ; variable for address of SPI pins (where output will be sent from), bit 7 is MOSI, bit 6 is SS,
+                        	     5: .equ outputSettings, 0x1701 ; variable for address of output settings, where we can set pins to inputs or outputs
+                        	     6: 
+                        	     7: .equ output, 0x1000 ; variable for address of output (for byte_send)
+                        	     8: 
+                        	     9: .equ byte1, 0x1001 ; variable for address of display address byte
+                        	    10: .equ byte2, 0x1002 ; variable for address of display digit byte 
+                        	    11: 
+                        	    12: .org 0x0200
+                        	    13: 
+                        	    14: main:
+                        	    15:     ; example code to display a HELLO
+                        	    16:     ; data sheet: 
+                        	    17: 
+00:0200 209E02          	    18:     JSR setup
+                        	    19: 
+                        	    20:     ; setup
+                        	    21:     set_up:
+                        	    22: 
+                        	    23:         ; send data to turn on display
+00:0203 A9FE            	    24:         LDA #0xFE
+00:0205 20B402          	    25:         JSR send_a
+00:0208 A941            	    26:         LDA #0x41
+00:020A 20B402          	    27:         JSR send_a
+                        	    28: 
+                        	    29:         ; send data to clear screen
+00:020D A9FE            	    30:         LDA #0xFE
+00:020F 20B402          	    31:         JSR send_a
+00:0212 A951            	    32:         LDA #0x51
+00:0214 20B402          	    33:         JSR send_a
+                        	    34: 
+00:0217 20BB02          	    35:         JSR delay
+                        	    36: 
+                        	    37: 
+                        	    38:     ; send data for HELLO
+                        	    39:     send:
+                        	    40: 
+00:021A A948            	    41:     LDA #0x48
+00:021C 20B402          	    42:     JSR send_a
+                        	    43: 
+00:021F 20BB02          	    44:     JSR delay
+                        	    45: 
+00:0222 A965            	    46:     LDA #0x65
+00:0224 20B402          	    47:     JSR send_a
+                        	    48: 
+00:0227 20BB02          	    49:     JSR delay
+                        	    50: 
+00:022A A96C            	    51:     LDA #0x6C
+00:022C 20B402          	    52:     JSR send_a
+                        	    53: 
+00:022F 20BB02          	    54:     JSR delay
+                        	    55: 
+00:0232 A96C            	    56:     LDA #0x6C
+00:0234 20B402          	    57:     JSR send_a
+                        	    58: 
+00:0237 20BB02          	    59:     JSR delay
+                        	    60: 
+00:023A A96F            	    61:     LDA #0x6F
+00:023C 20B402          	    62:     JSR send_a
+                        	    63: 
+00:023F 20BB02          	    64:     JSR delay
+                        	    65:     
+00:0242 A9FE            	    66:     LDA #0xFE
+00:0244 20B402          	    67:     JSR send_a
+                        	    68:     
+00:0247 20BB02          	    69:     JSR delay
+                        	    70: 
+00:024A A94B            	    71:     LDA #0x4B
+00:024C 20B402          	    72:     JSR send_a
+                        	    73: 
+00:024F A9FE            	    74:     LDA #0xFE
+00:0251 20B402          	    75:     JSR send_a
+                        	    76: 
+00:0254 A956            	    77:     LDA #0x56
+00:0256 20B402          	    78:     JSR send_a
+                        	    79: 
+00:0259 00              	    80:     BRK
+                        	    81: 
+                        	    82:     # 0x1C
+                        	    83: 
+                        	    84:     
+                        	    85: 
+                        	    86: 
+                        	    87: 
+                        	    88: byte_send: ; subroutine to send 8 bits (bit 7 is data, bit 6 is CS/SS, bit 5 is CLK)
+                        	    89: 
+                        	    90:     set_cs_low:
+00:025A AD0017          	    91:         LDA outputKIM
+00:025D 29BF            	    92:         AND #0b10111111  ; Pull SS (bit 6) low
+00:025F 8D0017          	    93:         STA outputKIM
+                        	    94: 
+                        	    95:     set_clk_high: ; set the clock low before getting data in pin 7
+00:0262 AD0017          	    96:         LDA outputKIM
+00:0265 0920            	    97:         ORA #0b00100000   ; Pull CLK (bit 5) high
+00:0267 8D0017          	    98:         STA outputKIM
+                        	    99:     
+                        	   100:     set_counter: ; counter to see how many bits have been sent of byte
+00:026A A208            	   101:         LDX #0x08
+                        	   102:         
+                        	   103:     send_output: ; send byte of data
+                        	   104:         
+                        	   105:         ; store output bit in outputKIM bit 7
+00:026C AD0010          	   106:         LDA output ; load output into accumulator
+00:026F 2980            	   107:         AND #0b10000000 ; AND output so only last bit is recognized
+00:0271 0D0017          	   108:         ORA outputKIM ; OR output to what's in 0x1700, nothing is changed except last bit
+00:0274 8D0017          	   109:         STA outputKIM ; store result in KIM output bit
+                        	   110:         
+00:0277 0E0010          	   111:         ASL output ; arithmetic shift left of output1 to move next output1 bit to bit 0
+                        	   112:     
+                        	   113:     clk_cycle: ; simulate a clock cycle that occurs
+                        	   114:                ; data has to be stable before clock rising edge
+                        	   115:         
+00:027A AD0017          	   116:         LDA outputKIM ;load outputKIM into memory
+00:027D 4920            	   117:         EOR #0b00100000 ; Invert SCLK (bit 5)
+00:027F 8D0017          	   118:         STA outputKIM ; Store into outputKIM
+                        	   119:         
+00:0282 AD0017          	   120:         LDA outputKIM ; load outputKIM
+00:0285 4920            	   121:         EOR #0b00100000 ; Invert SCLK (bit 5)
+00:0287 8D0017          	   122:         STA outputKIM ; Store into outputKIM
+                        	   123:         
+00:028A AD0017          	   124:         LDA outputKIM ; set final digit of outputKIM to 0 so it is modified correctly on next edge
+00:028D 297F            	   125:         AND #0b01111111
+00:028F 8D0017          	   126:         STA outputKIM
+                        	   127:         
+00:0292 CA              	   128:         DEX ; decrement number of bits remaining to be sent
+                        	   129:         
+00:0293 D0D7            	   130:         BNE send_output ; jump to send_output for next bit
+                        	   131: 
+                        	   132:     set_cs_high:
+00:0295 AD0017          	   133:         LDA outputKIM
+00:0298 0940            	   134:         ORA #0b01000000  ; Pull SS (bit 6) high
+00:029A 8D0017          	   135:         STA outputKIM
+                        	   136:         
+00:029D 60              	   137:     RTS ; end subroutine
+                        	   138: 
+                        	   139: setup: ; setup subroutine
+                        	   140: 
+                        	   141:     clear_decimal_mode:
+00:029E D8              	   142:         CLD
+                        	   143:     
+                        	   144:     set_initial_output_state: ; set outputKIM to 0x00
+00:029F A900            	   145:         LDA #0x00
+00:02A1 8D0017          	   146:         STA outputKIM
+                        	   147:     
+                        	   148:     make_output: ; make port A an output
+00:02A4 A9FF            	   149:         LDA #0xFF
+00:02A6 8D0117          	   150:         STA outputSettings
+                        	   151:     
+                        	   152:     set_low: ; Pull SS low and CLK pin high by ANDing with outputKIM and storing it back
+00:02A9 AD0017          	   153:             LDA outputKIM
+00:02AC 0920            	   154:             ORA #0b00100000  ; Pull CLK (bit 5) high
+00:02AE 29BF            	   155:             AND #0b10111111  ; Pull SS (bit 6) low
+00:02B0 8D0017          	   156:             STA outputKIM
+                        	   157:             
+00:02B3 60              	   158:     RTS
+                        	   159: 
+                        	   160: send_a:
+00:02B4 8D0010          	   161:     STA output
+00:02B7 205A02          	   162:     JSR byte_send
+00:02BA 60              	   163:     RTS
+                        	   164: 
+                        	   165: delay: ; delay subroutine
+                        	   166: 
+00:02BB A2FF            	   167:     LDX #0xFF ; Load X with outer loop count (e.g., 255)
+                        	   168:     outer_loop:
+                        	   169:     
+00:02BD A9FF            	   170:             LDA #0xFF
+                        	   171:             inner_loop:
+00:02BF E901            	   172:                 SBC #0x01
+00:02C1 D0FC            	   173:                 BNE inner_loop
+                        	   174:             
+00:02C3 CA              	   175:         DEX
+00:02C4 D0F7            	   176:         BNE outer_loop
+                        	   177:         
+00:02C6 60              	   178:     RTS ; end subroutine
+                        	   179: 
+                        	   180: 
+                        	   181: .org 0x2000 ; 
+                        	   182: 
+                        	   183: ; put data or whatever here
+                        	   184: ; .include "file.txt" or something
+
+
+Symbols by name:
+byte_send                        A:025A
+clear_decimal_mode               A:029E
+clk_cycle                        A:027A
+delay                            A:02BB
+inner_loop                       A:02BF
+main                             A:0200
+make_output                      A:02A4
+outer_loop                       A:02BD
+output                           S:1000
+outputKIM                        S:1700
+outputSettings                   S:1701
+send                             A:021A
+send_a                           A:02B4
+send_output                      A:026C
+set_clk_high                     A:0262
+set_counter                      A:026A
+set_cs_high                      A:0295
+set_cs_low                       A:025A
+set_initial_output_state         A:029F
+set_low                          A:02A9
+set_up                           A:0203
+setup                            A:029E
+
+Symbols by value:
+0200 main
+0203 set_up
+021A send
+025A byte_send
+025A set_cs_low
+0262 set_clk_high
+026A set_counter
+026C send_output
+027A clk_cycle
+0295 set_cs_high
+029E clear_decimal_mode
+029E setup
+029F set_initial_output_state
+02A4 make_output
+02A9 set_low
+02B4 send_a
+02BB delay
+02BD outer_loop
+02BF inner_loop
+1000 output
+1700 outputKIM
+1701 outputSettings
