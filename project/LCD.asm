@@ -1,4 +1,4 @@
-; Program for outline of code to do MOSI SPI
+; Program for the LCD to do MOSI SPI
 
 .cpu 6502
 .equ outputKIM, 0x1700 ; variable for address of SPI pins (where output will be sent from), bit 7 is MOSI, bit 6 is SS, bit 5 is SCLK
@@ -8,6 +8,7 @@
 
 .equ byte1, 0x1001 ; variable for address of display address byte
 .equ byte2, 0x1002 ; variable for address of display digit byte 
+.equ dataCount, 0x0040 ; variable for address of counter of current letter
 
 .org 0x0200
 
@@ -35,47 +36,12 @@ main:
         JSR delay
 
 
-    ; send data for HELLO
+    ; display the sentence
     send:
+    LDA #0x00
+    STA dataCount ; initiallyzing the data count 
 
-    LDA #0x48
-    JSR send_a
-
-    JSR delay
-
-    LDA #0x65
-    JSR send_a
-
-    JSR delay
-
-    LDA #0x6C
-    JSR send_a
-
-    JSR delay
-
-    LDA #0x6C
-    JSR send_a
-
-    JSR delay
-
-    LDA #0x6F
-    JSR send_a
-
-    JSR delay
-    
-    LDA #0xFE
-    JSR send_a
-    
-    JSR delay
-
-    LDA #0x4B
-    JSR send_a
-
-    LDA #0xFE
-    JSR send_a
-
-    LDA #0x56
-    JSR send_a
+    JSR display_letter
 
     BRK
 
@@ -83,7 +49,19 @@ main:
 
     
 
+display_data:
 
+
+
+; not done!!!
+display_letter:
+    LDY dataCount
+    LDA 0x2000, Y
+    
+    JSR send_a
+    JSR delay
+
+    RTS
 
 byte_send: ; subroutine to send 8 bits (bit 7 is data, bit 6 is CS/SS, bit 5 is CLK)
 
@@ -179,6 +157,6 @@ delay: ; delay subroutine
 
 
 .org 0x2000 ; 
-
+.include "file.txt"
 ; put data or whatever here
 ; .include "file.txt" or something
