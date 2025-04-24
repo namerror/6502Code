@@ -38,8 +38,8 @@ main:
 
     ; display the sentence
     send:
-    LDA #0x00
-    STA dataCount ; initiallyzing the data count 
+    LDA #0xFF
+    STA dataCount ; initiallyzing the data count, by default it's -1 since we increment at the start of the loop
 
     JSR display_letter
 
@@ -56,11 +56,14 @@ display_data:
 ; not done!!!
 display_letter:
     LDY dataCount
+    INY
+    STY dataCount ; increment the count
     LDA 0x2000, Y
-    
+    BEQ end
     JSR send_a
-    JSR delay
+    JMP display_letter
 
+    end:
     RTS
 
 byte_send: ; subroutine to send 8 bits (bit 7 is data, bit 6 is CS/SS, bit 5 is CLK)
