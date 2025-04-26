@@ -3,13 +3,16 @@
 .cpu 6502
 .equ outputKIM, 0x1700 ; variable for address of SPI pins (where output will be sent from), bit 7 is MOSI, bit 6 is SS, bit 5 is SCLK
 .equ outputSettings, 0x1701 ; variable for address of output settings, where we can set pins to inputs or outputs
+.equ inputKIM, 0x1702 ; port B for input
+.equ inputSettings, 0x1703
 
 .equ output, 0x1000 ; variable for address of output (for byte_send)
 
 .equ byte1, 0x1001 ; variable for address of display address byte
 .equ byte2, 0x1002 ; variable for address of display digit byte 
 .equ dataCount, 0x0040 ; variable for address of counter of current letter
-
+.equ pageAddressByte1, 0x0041 ; stores the lower byte of address of a new page of content
+.equ pageAddressByte2, 0x0042 ; higher byte of address
 .org 0x0200
 
 main:
@@ -36,34 +39,46 @@ main:
         JSR delay
 
 
-    ; display the sentence
+    LDA #0x00
+    STA pageAddressByte1
+    LDA #0x20
+    STA pageAddressByte2 ; default address at 0x2000
+    ; display the page
     send:
     LDA #0xFF
     STA dataCount ; initiallyzing the data count, by default it's -1 since we increment at the start of the loop
 
     JSR display_letter
-
+    JSR delay
+    JSR delay
+    JMP send
     BRK
 
     # 0x1C
 
-    
 
-display_data:
-
-
-
-; not done!!!
 display_letter:
     LDY dataCount
     INY
     STY dataCount ; increment the count
-    LDA 0x2000, Y
+    LDA (0x0041), Y
     BEQ end
     JSR send_a
     JMP display_letter
 
     end:
+    ; update the two bytes storing the next address
+    INY ; to the next address 
+    LDA 0x41
+    CLC
+    ADC #0 ; clear carry
+    TYA
+    ADC 0x41
+    STA 0x41
+
+    LDA 0x42
+    ADC #0 ; add carry
+    STA 0x42
     RTS
 
 byte_send: ; subroutine to send 8 bits (bit 7 is data, bit 6 is CS/SS, bit 5 is CLK)
@@ -126,9 +141,17 @@ setup: ; setup subroutine
         LDA #0x00
         STA outputKIM
     
+    set_initial_input_state:
+        LDA #0x00
+        STA inputKIM
+    
     make_output: ; make port A an output
         LDA #0xFF
         STA outputSettings
+    
+    make_input: ; make port B an input
+        LDA #0x00
+        STA inputSettings
     
     set_low: ; Pull SS low and CLK pin high by ANDing with outputKIM and storing it back
             LDA outputKIM

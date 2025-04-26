@@ -1,54 +1,51 @@
 import os
+def wrap_manual_pages(raw_text, width=20, lines_per_page=4):
+    # Split pages manually using '---' as the separator
+    page_texts = [page.strip() for page in raw_text.split('---')]
+    pages = []
 
-def generate_kim1_lcd_bytes(text):
-    words = text.split()
-    lines = []
-    current_line = ""
+    for page in page_texts:
+        chars = list(page)
+        lines = []
+        for i in range(0, width * lines_per_page, width):
+            line_chars = chars[i:i+width]
+            line = ''.join(line_chars).ljust(width)
+            lines.append(line)
+        pages.append(lines)
 
-    for word in words:
-        # Add a space before word if the line isn't empty
-        if current_line:
-            if len(current_line) + 1 + len(word) <= 20:
-                current_line += " " + word
-            else:
-                # Line full, push it and start new one
-                lines.append(current_line.ljust(20))
-                current_line = word
-        else:
-            # Start new line with word
-            current_line = word
+    return pages
 
-    # Don't forget the last line
-    if current_line:
-        lines.append(current_line.ljust(20))
 
-    # Ensure exactly 4 lines
-    while len(lines) < 4:
-        lines.append(" " * 20)
-    lines = lines[:4]  # trim extra lines if more than 80 chars
-
-    # LCD addresses for each visual line
+def generate_kim1_lcd_pages_manual(text):
     lcd_addresses = [0x00, 0x40, 0x14, 0x54]
-
-    # Generate .byte output
+    pages = wrap_manual_pages(text)
     output = []
-    for i, line in enumerate(lines):
-        if i > 0:
-            output.append(f".byte 0xFE, 0x45, 0x{lcd_addresses[i]:02X}")
-        output.append('.byte ' + ', '.join(f'"{char}"' for char in line))
 
-    output.append(".byte 0")  # Null terminator
+    for page in pages:
+        for i, line in enumerate(page):
+            if i > 0:
+                output.append(f".byte 0xFE, 0x45, 0x{lcd_addresses[i]:02X}")
+            output.append('.byte ' + ', '.join(f'"{c}"' if c not in ('"', "'") else f"'\\{c}'" for c in line))
+        output.append(".byte 0")  # End of page
+
     return "\n".join(output)
 
 
 if __name__ == "__main__":
-    example_text = "Hello this is Leon Long's project. Please DO NOT TOUCH!!!"
-    output_code = generate_kim1_lcd_bytes(example_text)
+    example_text = """
+THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG. THIS IS PAGE ONE.
+---
+PAGE TWO STARTS HERE AND SHOULD ALSO BE PADDING SPACES IF SHORT.
+---
+SHORT PAGE
+"""
 
-    # Write output to file.txt
-    output_path = os.path.join(os.path.dirname(__file__), "file.txt")
-    with open(output_path, "w") as f:
+    output_code = generate_kim1_lcd_pages_manual(example_text)
+
+    with open(os.path.join(__file__, "file.txt"), "w") as f:
         f.write(output_code)
 
-    print("Output written to file.txt")
+    print("Manual pages written to file.txt")
+
+
 
