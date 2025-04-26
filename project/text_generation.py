@@ -49,11 +49,19 @@ def generate_kim1_lcd_pages_manual(text):
 
 if __name__ == "__main__":
     example_text = """
-THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG. THIS IS PAGE ONE.
+Q: Where is the Effel Tower?
 ---
-PAGE TWO STARTS HERE AND SHOULD ALSO BE PADDING SPACES IF SHORT.
+1. Paris
+2. Prague
+3. London
+4. Berlin
 ---
-SHORT PAGE
+Q: Who invented the telephone?
+---
+1. Edison
+2. Alexander Graham Bell
+3. Nikola Tesla
+4. Einstein
 """
 
     output_code = generate_kim1_lcd_pages_manual(example_text)

@@ -13,6 +13,9 @@
 .equ dataCount, 0x0040 ; variable for address of counter of current letter
 .equ pageAddressByte1, 0x0041 ; stores the lower byte of address of a new page of content
 .equ pageAddressByte2, 0x0042 ; higher byte of address
+.equ answerAddressByte1, 0x0051 ; stores the lower byte of the address of the answer to the current question
+.equ answerAddressByte2, 0x0052 ; stores the higher byte of the address
+.equ userAnswer, 0x0050 ; stores the user's answer
 .org 0x0200
 
 main:
@@ -41,21 +44,95 @@ main:
 
     LDA #0x00
     STA pageAddressByte1
+    STA answerAddressByte1
     LDA #0x20
     STA pageAddressByte2 ; default address at 0x2000
+    LDA #0x90
+    STA answerAddressByte2 ; default address for answers at 0x9000
     ; display the page
     send:
     LDA #0xFF
     STA dataCount ; initiallyzing the data count, by default it's -1 since we increment at the start of the loop
+    JSR display_letter ; displays the page
 
+    wait_for_input:
+        LDA inputKIM
+        CMP #0xFF
+        BEQ wait_for_input ; keep looping until there's a button pressed
+        wait_for_release:
+        CMP #0xFF
+        BNE wait_for_release ; need to release the button if pressed
+    
+    ; show option page that comes after the question page
+    LDA #0xFF 
+    STA dataCount
     JSR display_letter
-    JSR delay
-    JSR delay
-    JMP send
+
+    wait_for_answer:
+        LDA inputKIM
+        CMP #0xFF
+        BEQ wait_for_input ; keep looping until there's a button pressed
+        STA userAnswer ; saves user's answer the moment a button is pressed
+        check_answer:
+            LDY #0
+            LDA (answerAddressByte1), Y ; load answer key
+            CMP userAnswer
+            BNE wrong_answer
+            JSR show_answer_right
+            JMP finish
+            wrong_answer:
+            JSR show_answer_wrong
+        finish:
+            JSR delay
+            JSR delay
+            JSR delay
+            INC answerAddressByte1
+            BNE no_carry
+            INC answerAddressByte2
+            no_carry:
+            JMP send
+
     BRK
 
     # 0x1C
 
+show_answer_right:
+    LDA #'C'
+    JSR send_a
+    LDA #'O'
+    JSR send_a
+    LDA #'R'
+    JSR send_a
+    LDA #'R'
+    JSR send_a  
+    LDA #'E'
+    JSR send_a 
+    LDA #'C'
+    JSR send_a
+    LDA #'T'
+    JSR send_a 
+    RTS
+
+show_answer_wrong:
+    LDA #'I'
+    JSR send_a
+    LDA #'N'
+    JSR send_a
+    LDA #'C'
+    JSR send_a
+    LDA #'O'
+    JSR send_a
+    LDA #'R'
+    JSR send_a
+    LDA #'R'
+    JSR send_a  
+    LDA #'E'
+    JSR send_a 
+    LDA #'C'
+    JSR send_a
+    LDA #'T'
+    JSR send_a 
+    RTS
 
 display_letter:
     LDY dataCount
@@ -183,6 +260,9 @@ delay: ; delay subroutine
 
 
 .org 0x2000 ; 
-.include "file.txt"
+.include "file.txt" ; file including text data for display
+
+.org 0x9000
+.include "answers.txt" ; file including answer keys
 ; put data or whatever here
 ; .include "file.txt" or something
