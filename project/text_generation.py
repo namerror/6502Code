@@ -1,20 +1,35 @@
 import os
-def wrap_manual_pages(raw_text, width=20, lines_per_page=4):
+
+def wrap_text_preserving_words(text, width=20):
+    """Wrap text into lines without breaking words across lines."""
+    words = text.split()
+    lines = []
+    current_line = ""
+
+    for word in words:
+        if len(current_line) + len(word) + (1 if current_line else 0) <= width:
+            if current_line:
+                current_line += " "
+            current_line += word
+        else:
+            lines.append(current_line)
+            current_line = word
+
+    if current_line:
+        lines.append(current_line)
+
+    return lines
+
+def wrap_manual_pages(raw_text, width=20):
     # Split pages manually using '---' as the separator
-    page_texts = [page.strip() for page in raw_text.split('---')]
+    page_texts = [page.strip().replace('\n', ' ') for page in raw_text.split('---')]
     pages = []
 
     for page in page_texts:
-        chars = list(page)
-        lines = []
-        for i in range(0, width * lines_per_page, width):
-            line_chars = chars[i:i+width]
-            line = ''.join(line_chars).ljust(width)
-            lines.append(line)
+        lines = wrap_text_preserving_words(page, width)
         pages.append(lines)
 
     return pages
-
 
 def generate_kim1_lcd_pages_manual(text):
     lcd_addresses = [0x00, 0x40, 0x14, 0x54]
@@ -23,13 +38,14 @@ def generate_kim1_lcd_pages_manual(text):
 
     for page in pages:
         for i, line in enumerate(page):
+            if i >= len(lcd_addresses):
+                break  # ignore extra lines beyond 4
             if i > 0:
                 output.append(f".byte 0xFE, 0x45, 0x{lcd_addresses[i]:02X}")
             output.append('.byte ' + ', '.join(f'"{c}"' if c not in ('"', "'") else f"'\\{c}'" for c in line))
         output.append(".byte 0")  # End of page
 
     return "\n".join(output)
-
 
 if __name__ == "__main__":
     example_text = """
@@ -42,10 +58,11 @@ SHORT PAGE
 
     output_code = generate_kim1_lcd_pages_manual(example_text)
 
-    with open(os.path.join(__file__, "file.txt"), "w") as f:
+    with open(os.path.join(os.path.dirname(__file__), "file.txt"), "w") as f:
         f.write(output_code)
 
     print("Manual pages written to file.txt")
+
 
 
 
