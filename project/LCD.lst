@@ -1,6 +1,7 @@
 Sections:
-00: "org0001:200" (200-2C0)
-01: "org0002:2000" (2000-210E)
+00: "org0001:200" (200-358)
+01: "org0002:2000" (2000-20AE)
+02: "org0003:9000" (9000-9002)
 
 
 Source: "LCD.asm"
@@ -9,509 +10,541 @@ Source: "LCD.asm"
                         	     3: .cpu 6502
                         	     4: .equ outputKIM, 0x1700 ; variable for address of SPI pins (where output will be sent from), bit 7 is MOSI, bit 6 is SS,
                         	     5: .equ outputSettings, 0x1701 ; variable for address of output settings, where we can set pins to inputs or outputs
-                        	     6: .equ inputKim, 0x1702 ; port B for input
-                        	     7: 
-                        	     8: .equ output, 0x1000 ; variable for address of output (for byte_send)
-                        	     9: 
-                        	    10: .equ byte1, 0x1001 ; variable for address of display address byte
-                        	    11: .equ byte2, 0x1002 ; variable for address of display digit byte 
-                        	    12: .equ dataCount, 0x0040 ; variable for address of counter of current letter
-                        	    13: .equ pageAddressByte1, 0x0041 ; stores the lower byte of address of a new page of content
-                        	    14: .equ pageAddressByte2, 0x0042 ; higher byte of address
-                        	    15: .org 0x0200
-                        	    16: 
-                        	    17: main:
-                        	    18:     ; example code to display a HELLO
-                        	    19:     ; data sheet: 
+                        	     6: .equ inputKIM, 0x1702 ; port B for input
+                        	     7: .equ inputSettings, 0x1703
+                        	     8: 
+                        	     9: .equ output, 0x1000 ; variable for address of output (for byte_send)
+                        	    10: 
+                        	    11: .equ byte1, 0x1001 ; variable for address of display address byte
+                        	    12: .equ byte2, 0x1002 ; variable for address of display digit byte 
+                        	    13: .equ dataCount, 0x0040 ; variable for address of counter of current letter
+                        	    14: .equ pageAddressByte1, 0x0041 ; stores the lower byte of address of a new page of content
+                        	    15: .equ pageAddressByte2, 0x0042 ; higher byte of address
+                        	    16: .equ answerAddressByte1, 0x0051 ; stores the lower byte of the address of the answer to the current question
+                        	    17: .equ answerAddressByte2, 0x0052 ; stores the higher byte of the address
+                        	    18: .equ userAnswer, 0x0050 ; stores the user's answer
+                        	    19: .org 0x0200
                         	    20: 
-00:0200 209702          	    21:     JSR setup
-                        	    22: 
-                        	    23:     ; setup
-                        	    24:     set_up:
-                        	    25: 
-                        	    26:         ; send data to turn on display
-00:0203 A9FE            	    27:         LDA #0xFE
-00:0205 20AD02          	    28:         JSR send_a
-00:0208 A941            	    29:         LDA #0x41
-00:020A 20AD02          	    30:         JSR send_a
-                        	    31: 
-                        	    32:         ; send data to clear screen
-00:020D A9FE            	    33:         LDA #0xFE
-00:020F 20AD02          	    34:         JSR send_a
-00:0212 A951            	    35:         LDA #0x51
-00:0214 20AD02          	    36:         JSR send_a
-                        	    37: 
-00:0217 20B402          	    38:         JSR delay
-                        	    39: 
-                        	    40: 
-00:021A A900            	    41:     LDA #0x00
-00:021C 8541            	    42:     STA pageAddressByte1
-00:021E A920            	    43:     LDA #0x20
-00:0220 8542            	    44:     STA pageAddressByte2 ; default address at 0x2000
-                        	    45:     ; display the page
-                        	    46:     send:
-00:0222 A9FF            	    47:     LDA #0xFF
-00:0224 8540            	    48:     STA dataCount ; initiallyzing the data count, by default it's -1 since we increment at the start of the loop
-                        	    49: 
-00:0226 203302          	    50:     JSR display_letter
-00:0229 20B402          	    51:     JSR delay
-00:022C 20B402          	    52:     JSR delay
-00:022F 4C2202          	    53:     JMP send
-00:0232 00              	    54:     BRK
-                        	    55: 
-                        	    56:     # 0x1C
+                        	    21: main:
+                        	    22:     ; example code to display a HELLO
+                        	    23:     ; data sheet: 
+                        	    24: 
+00:0200 202503          	    25:     JSR setup
+                        	    26: 
+                        	    27:     ; setup
+                        	    28:     set_up:
+                        	    29: 
+                        	    30:         ; send data to turn on display
+00:0203 A9FE            	    31:         LDA #0xFE
+00:0205 204503          	    32:         JSR send_a
+00:0208 A941            	    33:         LDA #0x41
+00:020A 204503          	    34:         JSR send_a
+                        	    35: 
+                        	    36:         ; send data to clear screen
+00:020D A9FE            	    37:         LDA #0xFE
+00:020F 204503          	    38:         JSR send_a
+00:0212 A951            	    39:         LDA #0x51
+00:0214 204503          	    40:         JSR send_a
+                        	    41: 
+00:0217 204C03          	    42:         JSR delay
+                        	    43: 
+                        	    44: 
+00:021A A900            	    45:     LDA #0x00
+00:021C 8541            	    46:     STA pageAddressByte1
+00:021E 8551            	    47:     STA answerAddressByte1
+00:0220 A920            	    48:     LDA #0x20
+00:0222 8542            	    49:     STA pageAddressByte2 ; default address at 0x2000
+00:0224 A990            	    50:     LDA #0x90
+00:0226 8552            	    51:     STA answerAddressByte2 ; default address for answers at 0x9000
+                        	    52:     ; display the page
+                        	    53:     send:
+00:0228 A9FF            	    54:     LDA #0xFF
+00:022A 8540            	    55:     STA dataCount ; initiallyzing the data count, by default it's -1 since we increment at the start of the loop
+00:022C 20C002          	    56:     JSR display_letter ; displays the page
                         	    57: 
-                        	    58: 
-                        	    59: display_letter:
-00:0233 A440            	    60:     LDY dataCount
-00:0235 C8              	    61:     INY
-00:0236 8440            	    62:     STY dataCount ; increment the count
-00:0238 B141            	    63:     LDA (0x0041), Y
-00:023A F006            	    64:     BEQ end
-00:023C 20AD02          	    65:     JSR send_a
-00:023F 4C3302          	    66:     JMP display_letter
-                        	    67: 
-                        	    68:     end:
-                        	    69:     ; update the two bytes storing the next address
-00:0242 A541            	    70:     LDA 0x41
-00:0244 18              	    71:     CLC
-00:0245 6900            	    72:     ADC #0 ; clear carry
-00:0247 98              	    73:     TYA
-00:0248 6541            	    74:     ADC 0x41
-00:024A 8541            	    75:     STA 0x41
-                        	    76: 
-00:024C A542            	    77:     LDA 0x42
-00:024E 6900            	    78:     ADC #0 ; add carry
-00:0250 8542            	    79:     STA 0x42
-00:0252 60              	    80:     RTS
-                        	    81: 
-                        	    82: byte_send: ; subroutine to send 8 bits (bit 7 is data, bit 6 is CS/SS, bit 5 is CLK)
-                        	    83: 
-                        	    84:     set_cs_low:
-00:0253 AD0017          	    85:         LDA outputKIM
-00:0256 29BF            	    86:         AND #0b10111111  ; Pull SS (bit 6) low
-00:0258 8D0017          	    87:         STA outputKIM
-                        	    88: 
-                        	    89:     set_clk_high: ; set the clock low before getting data in pin 7
-00:025B AD0017          	    90:         LDA outputKIM
-00:025E 0920            	    91:         ORA #0b00100000   ; Pull CLK (bit 5) high
-00:0260 8D0017          	    92:         STA outputKIM
-                        	    93:     
-                        	    94:     set_counter: ; counter to see how many bits have been sent of byte
-00:0263 A208            	    95:         LDX #0x08
-                        	    96:         
-                        	    97:     send_output: ; send byte of data
-                        	    98:         
-                        	    99:         ; store output bit in outputKIM bit 7
-00:0265 AD0010          	   100:         LDA output ; load output into accumulator
-00:0268 2980            	   101:         AND #0b10000000 ; AND output so only last bit is recognized
-00:026A 0D0017          	   102:         ORA outputKIM ; OR output to what's in 0x1700, nothing is changed except last bit
-00:026D 8D0017          	   103:         STA outputKIM ; store result in KIM output bit
-                        	   104:         
-00:0270 0E0010          	   105:         ASL output ; arithmetic shift left of output1 to move next output1 bit to bit 0
-                        	   106:     
-                        	   107:     clk_cycle: ; simulate a clock cycle that occurs
-                        	   108:                ; data has to be stable before clock rising edge
-                        	   109:         
-00:0273 AD0017          	   110:         LDA outputKIM ;load outputKIM into memory
-00:0276 4920            	   111:         EOR #0b00100000 ; Invert SCLK (bit 5)
-00:0278 8D0017          	   112:         STA outputKIM ; Store into outputKIM
-                        	   113:         
-00:027B AD0017          	   114:         LDA outputKIM ; load outputKIM
-00:027E 4920            	   115:         EOR #0b00100000 ; Invert SCLK (bit 5)
-00:0280 8D0017          	   116:         STA outputKIM ; Store into outputKIM
-                        	   117:         
-00:0283 AD0017          	   118:         LDA outputKIM ; set final digit of outputKIM to 0 so it is modified correctly on next edge
-00:0286 297F            	   119:         AND #0b01111111
-00:0288 8D0017          	   120:         STA outputKIM
-                        	   121:         
-00:028B CA              	   122:         DEX ; decrement number of bits remaining to be sent
-                        	   123:         
-00:028C D0D7            	   124:         BNE send_output ; jump to send_output for next bit
-                        	   125: 
-                        	   126:     set_cs_high:
-00:028E AD0017          	   127:         LDA outputKIM
-00:0291 0940            	   128:         ORA #0b01000000  ; Pull SS (bit 6) high
-00:0293 8D0017          	   129:         STA outputKIM
-                        	   130:         
-00:0296 60              	   131:     RTS ; end subroutine
-                        	   132: 
-                        	   133: setup: ; setup subroutine
-                        	   134: 
-                        	   135:     clear_decimal_mode:
-00:0297 D8              	   136:         CLD
-                        	   137:     
-                        	   138:     set_initial_output_state: ; set outputKIM to 0x00
-00:0298 A900            	   139:         LDA #0x00
-00:029A 8D0017          	   140:         STA outputKIM
-                        	   141:     
-                        	   142:     make_output: ; make port A an output
-00:029D A9FF            	   143:         LDA #0xFF
-00:029F 8D0117          	   144:         STA outputSettings
-                        	   145:     
-                        	   146:     set_low: ; Pull SS low and CLK pin high by ANDing with outputKIM and storing it back
-00:02A2 AD0017          	   147:             LDA outputKIM
-00:02A5 0920            	   148:             ORA #0b00100000  ; Pull CLK (bit 5) high
-00:02A7 29BF            	   149:             AND #0b10111111  ; Pull SS (bit 6) low
-00:02A9 8D0017          	   150:             STA outputKIM
-                        	   151:             
-00:02AC 60              	   152:     RTS
-                        	   153: 
-                        	   154: send_a:
-00:02AD 8D0010          	   155:     STA output
-00:02B0 205302          	   156:     JSR byte_send
-00:02B3 60              	   157:     RTS
-                        	   158: 
-                        	   159: delay: ; delay subroutine
+                        	    58:     wait_for_input:
+00:022F AD0217          	    59:         LDA inputKIM
+00:0232 C9FF            	    60:         CMP #0xFF
+00:0234 F0F9            	    61:         BEQ wait_for_input ; keep looping until there's a button pressed
+                        	    62:         wait_for_release:
+00:0236 C9FF            	    63:         CMP #0xFF
+00:0238 D0FC            	    64:         BNE wait_for_release ; need to release the button if pressed
+                        	    65:     
+                        	    66:     ; show option page that comes after the question page
+00:023A A9FF            	    67:     LDA #0xFF 
+00:023C 8540            	    68:     STA dataCount
+00:023E 20C002          	    69:     JSR display_letter
+                        	    70: 
+                        	    71:     wait_for_answer:
+00:0241 AD0217          	    72:         LDA inputKIM
+00:0244 C9FF            	    73:         CMP #0xFF
+00:0246 F0E7            	    74:         BEQ wait_for_input ; keep looping until there's a button pressed
+00:0248 8550            	    75:         STA userAnswer ; saves user's answer the moment a button is pressed
+                        	    76:         check_answer:
+00:024A A000            	    77:             LDY #0
+00:024C B151            	    78:             LDA (answerAddressByte1), Y ; load answer key
+00:024E C550            	    79:             CMP userAnswer
+00:0250 D006            	    80:             BNE wrong_answer
+00:0252 206E02          	    81:             JSR show_answer_right
+00:0255 4C5B02          	    82:             JMP finish
+                        	    83:             wrong_answer:
+00:0258 209202          	    84:             JSR show_answer_wrong
+                        	    85:         finish:
+00:025B 204C03          	    86:             JSR delay
+00:025E 204C03          	    87:             JSR delay
+00:0261 204C03          	    88:             JSR delay
+00:0264 E651            	    89:             INC answerAddressByte1
+00:0266 D002            	    90:             BNE no_carry
+00:0268 E652            	    91:             INC answerAddressByte2
+                        	    92:             no_carry:
+00:026A 4C2802          	    93:             JMP send
+                        	    94: 
+00:026D 00              	    95:     BRK
+                        	    96: 
+                        	    97:     # 0x1C
+                        	    98: 
+                        	    99: show_answer_right:
+00:026E A943            	   100:     LDA #'C'
+00:0270 204503          	   101:     JSR send_a
+00:0273 A94F            	   102:     LDA #'O'
+00:0275 204503          	   103:     JSR send_a
+00:0278 A952            	   104:     LDA #'R'
+00:027A 204503          	   105:     JSR send_a
+00:027D A952            	   106:     LDA #'R'
+00:027F 204503          	   107:     JSR send_a  
+00:0282 A945            	   108:     LDA #'E'
+00:0284 204503          	   109:     JSR send_a 
+00:0287 A943            	   110:     LDA #'C'
+00:0289 204503          	   111:     JSR send_a
+00:028C A954            	   112:     LDA #'T'
+00:028E 204503          	   113:     JSR send_a 
+00:0291 60              	   114:     RTS
+                        	   115: 
+                        	   116: show_answer_wrong:
+00:0292 A949            	   117:     LDA #'I'
+00:0294 204503          	   118:     JSR send_a
+00:0297 A94E            	   119:     LDA #'N'
+00:0299 204503          	   120:     JSR send_a
+00:029C A943            	   121:     LDA #'C'
+00:029E 204503          	   122:     JSR send_a
+00:02A1 A94F            	   123:     LDA #'O'
+00:02A3 204503          	   124:     JSR send_a
+00:02A6 A952            	   125:     LDA #'R'
+00:02A8 204503          	   126:     JSR send_a
+00:02AB A952            	   127:     LDA #'R'
+00:02AD 204503          	   128:     JSR send_a  
+00:02B0 A945            	   129:     LDA #'E'
+00:02B2 204503          	   130:     JSR send_a 
+00:02B5 A943            	   131:     LDA #'C'
+00:02B7 204503          	   132:     JSR send_a
+00:02BA A954            	   133:     LDA #'T'
+00:02BC 204503          	   134:     JSR send_a 
+00:02BF 60              	   135:     RTS
+                        	   136: 
+                        	   137: display_letter:
+00:02C0 A440            	   138:     LDY dataCount
+00:02C2 C8              	   139:     INY
+00:02C3 8440            	   140:     STY dataCount ; increment the count
+00:02C5 B141            	   141:     LDA (0x0041), Y
+00:02C7 F006            	   142:     BEQ end
+00:02C9 204503          	   143:     JSR send_a
+00:02CC 4CC002          	   144:     JMP display_letter
+                        	   145: 
+                        	   146:     end:
+                        	   147:     ; update the two bytes storing the next address
+00:02CF C8              	   148:     INY ; to the next address 
+00:02D0 A541            	   149:     LDA 0x41
+00:02D2 18              	   150:     CLC
+00:02D3 6900            	   151:     ADC #0 ; clear carry
+00:02D5 98              	   152:     TYA
+00:02D6 6541            	   153:     ADC 0x41
+00:02D8 8541            	   154:     STA 0x41
+                        	   155: 
+00:02DA A542            	   156:     LDA 0x42
+00:02DC 6900            	   157:     ADC #0 ; add carry
+00:02DE 8542            	   158:     STA 0x42
+00:02E0 60              	   159:     RTS
                         	   160: 
-00:02B4 A2FF            	   161:     LDX #0xFF ; Load X with outer loop count (e.g., 255)
-                        	   162:     outer_loop:
-                        	   163:     
-00:02B6 A9FF            	   164:             LDA #0xFF
-                        	   165:             inner_loop:
-00:02B8 E901            	   166:                 SBC #0x01
-00:02BA D0FC            	   167:                 BNE inner_loop
-                        	   168:             
-00:02BC CA              	   169:         DEX
-00:02BD D0F7            	   170:         BNE outer_loop
-                        	   171:         
-00:02BF 60              	   172:     RTS ; end subroutine
-                        	   173: 
-                        	   174: 
-                        	   175: .org 0x2000 ; 
-                        	   176: .include "file.txt"
+                        	   161: byte_send: ; subroutine to send 8 bits (bit 7 is data, bit 6 is CS/SS, bit 5 is CLK)
+                        	   162: 
+                        	   163:     set_cs_low:
+00:02E1 AD0017          	   164:         LDA outputKIM
+00:02E4 29BF            	   165:         AND #0b10111111  ; Pull SS (bit 6) low
+00:02E6 8D0017          	   166:         STA outputKIM
+                        	   167: 
+                        	   168:     set_clk_high: ; set the clock low before getting data in pin 7
+00:02E9 AD0017          	   169:         LDA outputKIM
+00:02EC 0920            	   170:         ORA #0b00100000   ; Pull CLK (bit 5) high
+00:02EE 8D0017          	   171:         STA outputKIM
+                        	   172:     
+                        	   173:     set_counter: ; counter to see how many bits have been sent of byte
+00:02F1 A208            	   174:         LDX #0x08
+                        	   175:         
+                        	   176:     send_output: ; send byte of data
+                        	   177:         
+                        	   178:         ; store output bit in outputKIM bit 7
+00:02F3 AD0010          	   179:         LDA output ; load output into accumulator
+00:02F6 2980            	   180:         AND #0b10000000 ; AND output so only last bit is recognized
+00:02F8 0D0017          	   181:         ORA outputKIM ; OR output to what's in 0x1700, nothing is changed except last bit
+00:02FB 8D0017          	   182:         STA outputKIM ; store result in KIM output bit
+                        	   183:         
+00:02FE 0E0010          	   184:         ASL output ; arithmetic shift left of output1 to move next output1 bit to bit 0
+                        	   185:     
+                        	   186:     clk_cycle: ; simulate a clock cycle that occurs
+                        	   187:                ; data has to be stable before clock rising edge
+                        	   188:         
+00:0301 AD0017          	   189:         LDA outputKIM ;load outputKIM into memory
+00:0304 4920            	   190:         EOR #0b00100000 ; Invert SCLK (bit 5)
+00:0306 8D0017          	   191:         STA outputKIM ; Store into outputKIM
+                        	   192:         
+00:0309 AD0017          	   193:         LDA outputKIM ; load outputKIM
+00:030C 4920            	   194:         EOR #0b00100000 ; Invert SCLK (bit 5)
+00:030E 8D0017          	   195:         STA outputKIM ; Store into outputKIM
+                        	   196:         
+00:0311 AD0017          	   197:         LDA outputKIM ; set final digit of outputKIM to 0 so it is modified correctly on next edge
+00:0314 297F            	   198:         AND #0b01111111
+00:0316 8D0017          	   199:         STA outputKIM
+                        	   200:         
+00:0319 CA              	   201:         DEX ; decrement number of bits remaining to be sent
+                        	   202:         
+00:031A D0D7            	   203:         BNE send_output ; jump to send_output for next bit
+                        	   204: 
+                        	   205:     set_cs_high:
+00:031C AD0017          	   206:         LDA outputKIM
+00:031F 0940            	   207:         ORA #0b01000000  ; Pull SS (bit 6) high
+00:0321 8D0017          	   208:         STA outputKIM
+                        	   209:         
+00:0324 60              	   210:     RTS ; end subroutine
+                        	   211: 
+                        	   212: setup: ; setup subroutine
+                        	   213: 
+                        	   214:     clear_decimal_mode:
+00:0325 D8              	   215:         CLD
+                        	   216:     
+                        	   217:     set_initial_output_state: ; set outputKIM to 0x00
+00:0326 A900            	   218:         LDA #0x00
+00:0328 8D0017          	   219:         STA outputKIM
+                        	   220:     
+                        	   221:     set_initial_input_state:
+00:032B A900            	   222:         LDA #0x00
+00:032D 8D0217          	   223:         STA inputKIM
+                        	   224:     
+                        	   225:     make_output: ; make port A an output
+00:0330 A9FF            	   226:         LDA #0xFF
+00:0332 8D0117          	   227:         STA outputSettings
+                        	   228:     
+                        	   229:     make_input: ; make port B an input
+00:0335 A900            	   230:         LDA #0x00
+00:0337 8D0317          	   231:         STA inputSettings
+                        	   232:     
+                        	   233:     set_low: ; Pull SS low and CLK pin high by ANDing with outputKIM and storing it back
+00:033A AD0017          	   234:             LDA outputKIM
+00:033D 0920            	   235:             ORA #0b00100000  ; Pull CLK (bit 5) high
+00:033F 29BF            	   236:             AND #0b10111111  ; Pull SS (bit 6) low
+00:0341 8D0017          	   237:             STA outputKIM
+                        	   238:             
+00:0344 60              	   239:     RTS
+                        	   240: 
+                        	   241: send_a:
+00:0345 8D0010          	   242:     STA output
+00:0348 20E102          	   243:     JSR byte_send
+00:034B 60              	   244:     RTS
+                        	   245: 
+                        	   246: delay: ; delay subroutine
+                        	   247: 
+00:034C A2FF            	   248:     LDX #0xFF ; Load X with outer loop count (e.g., 255)
+                        	   249:     outer_loop:
+                        	   250:     
+00:034E A9FF            	   251:             LDA #0xFF
+                        	   252:             inner_loop:
+00:0350 E901            	   253:                 SBC #0x01
+00:0352 D0FC            	   254:                 BNE inner_loop
+                        	   255:             
+00:0354 CA              	   256:         DEX
+00:0355 D0F7            	   257:         BNE outer_loop
+                        	   258:         
+00:0357 60              	   259:     RTS ; end subroutine
+                        	   260: 
+                        	   261: 
+                        	   262: .org 0x2000 ; 
+                        	   263: .include "file.txt" ; file including text data for display
 
 Source: "file.txt"
-01:2000 54              	     1: .byte "T", "H", "E", " ", "Q", "U", "I", "C", "K", " ", "B", "R", "O", "W", "N", " ", "F", "O", "X", " "
-01:2001 48
-01:2002 45
-01:2003 20
-01:2004 51
-01:2005 55
-01:2006 49
-01:2007 43
-01:2008 4B
-01:2009 20
-01:200A 42
-01:200B 52
-01:200C 4F
-01:200D 57
-01:200E 4E
-01:200F 20
-01:2010 46
-01:2011 4F
-01:2012 58
-01:2013 20
-01:2014 FE              	     2: .byte 0xFE, 0x45, 0x40
-01:2015 45
-01:2016 40
-01:2017 4A              	     3: .byte "J", "U", "M", "P", "S", " ", "O", "V", "E", "R", " ", "T", "H", "E", " ", "L", "A", "Z", "Y", " "
-01:2018 55
-01:2019 4D
-01:201A 50
-01:201B 53
-01:201C 20
-01:201D 4F
-01:201E 56
-01:201F 45
-01:2020 52
+01:2000 51              	     1: .byte "Q", ":", " ", "W", "h", "e", "r", "e", " ", "i", "s", " ", "t", "h", "e"
+01:2001 3A
+01:2002 20
+01:2003 57
+01:2004 68
+01:2005 65
+01:2006 72
+01:2007 65
+01:2008 20
+01:2009 69
+01:200A 73
+01:200B 20
+01:200C 74
+01:200D 68
+01:200E 65
+01:200F FE              	     2: .byte 0xFE, 0x45, 0x40
+01:2010 45
+01:2011 40
+01:2012 45              	     3: .byte "E", "f", "f", "e", "l", " ", "T", "o", "w", "e", "r", "?"
+01:2013 66
+01:2014 66
+01:2015 65
+01:2016 6C
+01:2017 20
+01:2018 54
+01:2019 6F
+01:201A 77
+01:201B 65
+01:201C 72
+01:201D 3F
+01:201E 00              	     4: .byte 0
+01:201F 31              	     5: .byte "1", ".", " ", "P", "a", "r", "i", "s", " ", "2", ".", " ", "P", "r", "a", "g", "u", "e"
+01:2020 2E
 01:2021 20
-01:2022 54
-01:2023 48
-01:2024 45
-01:2025 20
-01:2026 4C
-01:2027 41
-01:2028 5A
-01:2029 59
+01:2022 50
+01:2023 61
+01:2024 72
+01:2025 69
+01:2026 73
+01:2027 20
+01:2028 32
+01:2029 2E
 01:202A 20
-01:202B FE              	     4: .byte 0xFE, 0x45, 0x14
-01:202C 45
-01:202D 14
-01:202E 44              	     5: .byte "D", "O", "G", ".", " ", "T", "H", "I", "S", " ", "I", "S", " ", "L", "I", "N", "E", " ", " ", " "
-01:202F 4F
-01:2030 47
-01:2031 2E
-01:2032 20
-01:2033 54
-01:2034 48
-01:2035 49
-01:2036 53
-01:2037 20
-01:2038 49
-01:2039 53
-01:203A 20
-01:203B 4C
-01:203C 49
-01:203D 4E
-01:203E 45
-01:203F 20
+01:202B 50
+01:202C 72
+01:202D 61
+01:202E 67
+01:202F 75
+01:2030 65
+01:2031 FE              	     6: .byte 0xFE, 0x45, 0x40
+01:2032 45
+01:2033 40
+01:2034 33              	     7: .byte "3", ".", " ", "L", "o", "n", "d", "o", "n", " ", "4", ".", " ", "B", "e", "r", "l", "i", "n"
+01:2035 2E
+01:2036 20
+01:2037 4C
+01:2038 6F
+01:2039 6E
+01:203A 64
+01:203B 6F
+01:203C 6E
+01:203D 20
+01:203E 34
+01:203F 2E
 01:2040 20
-01:2041 20
-01:2042 FE              	     6: .byte 0xFE, 0x45, 0x54
-01:2043 45
-01:2044 54
-01:2045 46              	     7: .byte "F", "O", "U", "R", ".", ".", ".", " ", "A", "N", "D", " ", "T", "H", "I", "S", " ", "I", "S", " "
-01:2046 4F
-01:2047 55
-01:2048 52
-01:2049 2E
-01:204A 2E
-01:204B 2E
-01:204C 20
-01:204D 41
-01:204E 4E
-01:204F 44
-01:2050 20
-01:2051 54
-01:2052 48
-01:2053 49
-01:2054 53
-01:2055 20
-01:2056 49
-01:2057 53
-01:2058 20
-01:2059 00              	     8: .byte 0
-01:205A 41              	     9: .byte "A", "N", "O", "T", "H", "E", "R", " ", "P", "A", "G", "E", " ", "O", "F", " ", "T", "E", "X", "T"
-01:205B 4E
-01:205C 4F
-01:205D 54
-01:205E 48
-01:205F 45
-01:2060 52
-01:2061 20
-01:2062 50
-01:2063 41
-01:2064 47
-01:2065 45
-01:2066 20
-01:2067 4F
-01:2068 46
-01:2069 20
-01:206A 54
-01:206B 45
-01:206C 58
-01:206D 54
-01:206E FE              	    10: .byte 0xFE, 0x45, 0x40
-01:206F 45
-01:2070 40
-01:2071 54              	    11: .byte "T", "O", " ", "S", "H", "O", "W", " ", "T", "H", "A", "T", " ", " ", " ", " ", " ", " ", " ", " "
-01:2072 4F
-01:2073 20
-01:2074 53
-01:2075 48
-01:2076 4F
-01:2077 57
-01:2078 20
-01:2079 54
-01:207A 48
-01:207B 41
-01:207C 54
-01:207D 20
-01:207E 20
-01:207F 20
-01:2080 20
+01:2041 42
+01:2042 65
+01:2043 72
+01:2044 6C
+01:2045 69
+01:2046 6E
+01:2047 00              	     8: .byte 0
+01:2048 51              	     9: .byte "Q", ":", " ", "W", "h", "o", " ", "i", "n", "v", "e", "n", "t", "e", "d", " ", "t", "h", "e"
+01:2049 3A
+01:204A 20
+01:204B 57
+01:204C 68
+01:204D 6F
+01:204E 20
+01:204F 69
+01:2050 6E
+01:2051 76
+01:2052 65
+01:2053 6E
+01:2054 74
+01:2055 65
+01:2056 64
+01:2057 20
+01:2058 74
+01:2059 68
+01:205A 65
+01:205B FE              	    10: .byte 0xFE, 0x45, 0x40
+01:205C 45
+01:205D 40
+01:205E 74              	    11: .byte "t", "e", "l", "e", "p", "h", "o", "n", "e", "?"
+01:205F 65
+01:2060 6C
+01:2061 65
+01:2062 70
+01:2063 68
+01:2064 6F
+01:2065 6E
+01:2066 65
+01:2067 3F
+01:2068 00              	    12: .byte 0
+01:2069 31              	    13: .byte "1", ".", " ", "E", "d", "i", "s", "o", "n", " ", "2", "."
+01:206A 2E
+01:206B 20
+01:206C 45
+01:206D 64
+01:206E 69
+01:206F 73
+01:2070 6F
+01:2071 6E
+01:2072 20
+01:2073 32
+01:2074 2E
+01:2075 FE              	    14: .byte 0xFE, 0x45, 0x40
+01:2076 45
+01:2077 40
+01:2078 41              	    15: .byte "A", "l", "e", "x", "a", "n", "d", "e", "r", " ", "G", "r", "a", "h", "a", "m"
+01:2079 6C
+01:207A 65
+01:207B 78
+01:207C 61
+01:207D 6E
+01:207E 64
+01:207F 65
+01:2080 72
 01:2081 20
-01:2082 20
-01:2083 20
-01:2084 20
-01:2085 FE              	    12: .byte 0xFE, 0x45, 0x14
-01:2086 45
-01:2087 14
-01:2088 4D              	    13: .byte "M", "U", "L", "T", "I", "P", "L", "E", " ", "P", "A", "G", "E", "S", " ", "W", "O", "R", "K", "!"
-01:2089 55
-01:208A 4C
-01:208B 54
-01:208C 49
-01:208D 50
-01:208E 4C
-01:208F 45
-01:2090 20
-01:2091 50
-01:2092 41
-01:2093 47
-01:2094 45
-01:2095 53
-01:2096 20
-01:2097 57
-01:2098 4F
-01:2099 52
-01:209A 4B
-01:209B 21
-01:209C FE              	    14: .byte 0xFE, 0x45, 0x54
-01:209D 45
-01:209E 54
-01:209F 45              	    15: .byte "E", "A", "C", "H", " ", "P", "A", "G", "E", " ", "H", "A", "S", " ", "F", "O", "U", "R", " ", " "
-01:20A0 41
-01:20A1 43
-01:20A2 48
-01:20A3 20
-01:20A4 50
-01:20A5 41
-01:20A6 47
-01:20A7 45
-01:20A8 20
-01:20A9 48
-01:20AA 41
-01:20AB 53
-01:20AC 20
-01:20AD 46
-01:20AE 4F
-01:20AF 55
-01:20B0 52
-01:20B1 20
-01:20B2 20
-01:20B3 00              	    16: .byte 0
-01:20B4 4C              	    17: .byte "L", "I", "N", "E", "S", " ", "O", "F", " ", "2", "0", " ", " ", " ", " ", " ", " ", " ", " ", " "
-01:20B5 49
-01:20B6 4E
-01:20B7 45
-01:20B8 53
-01:20B9 20
-01:20BA 4F
-01:20BB 46
-01:20BC 20
-01:20BD 32
-01:20BE 30
-01:20BF 20
-01:20C0 20
-01:20C1 20
-01:20C2 20
-01:20C3 20
-01:20C4 20
-01:20C5 20
-01:20C6 20
-01:20C7 20
-01:20C8 FE              	    18: .byte 0xFE, 0x45, 0x40
-01:20C9 45
-01:20CA 40
-01:20CB 43              	    19: .byte "C", "H", "A", "R", "A", "C", "T", "E", "R", "S", ",", " ", "F", "I", "L", "L", "E", "D", " ", " "
-01:20CC 48
-01:20CD 41
-01:20CE 52
-01:20CF 41
-01:20D0 43
-01:20D1 54
-01:20D2 45
-01:20D3 52
-01:20D4 53
-01:20D5 2C
-01:20D6 20
-01:20D7 46
-01:20D8 49
-01:20D9 4C
-01:20DA 4C
-01:20DB 45
-01:20DC 44
-01:20DD 20
-01:20DE 20
-01:20DF FE              	    20: .byte 0xFE, 0x45, 0x14
-01:20E0 45
-01:20E1 14
-01:20E2 42              	    21: .byte "B", "Y", " ", "S", "M", "A", "R", "T", " ", "W", "R", "A", "P", "P", "I", "N", "G", ".", " ", " "
-01:20E3 59
-01:20E4 20
-01:20E5 53
-01:20E6 4D
-01:20E7 41
-01:20E8 52
-01:20E9 54
-01:20EA 20
-01:20EB 57
-01:20EC 52
-01:20ED 41
-01:20EE 50
-01:20EF 50
-01:20F0 49
-01:20F1 4E
-01:20F2 47
-01:20F3 2E
-01:20F4 20
-01:20F5 20
-01:20F6 FE              	    22: .byte 0xFE, 0x45, 0x54
-01:20F7 45
-01:20F8 54
-01:20F9 20              	    23: .byte " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "
-01:20FA 20
-01:20FB 20
-01:20FC 20
-01:20FD 20
-01:20FE 20
-01:20FF 20
-01:2100 20
-01:2101 20
-01:2102 20
-01:2103 20
-01:2104 20
-01:2105 20
-01:2106 20
-01:2107 20
-01:2108 20
-01:2109 20
-01:210A 20
-01:210B 20
-01:210C 20
-01:210D 00              	    24: .byte 0
+01:2082 47
+01:2083 72
+01:2084 61
+01:2085 68
+01:2086 61
+01:2087 6D
+01:2088 FE              	    16: .byte 0xFE, 0x45, 0x14
+01:2089 45
+01:208A 14
+01:208B 42              	    17: .byte "B", "e", "l", "l", " ", "3", ".", " ", "N", "i", "k", "o", "l", "a", " ", "T", "e", "s", "l", "a"
+01:208C 65
+01:208D 6C
+01:208E 6C
+01:208F 20
+01:2090 33
+01:2091 2E
+01:2092 20
+01:2093 4E
+01:2094 69
+01:2095 6B
+01:2096 6F
+01:2097 6C
+01:2098 61
+01:2099 20
+01:209A 54
+01:209B 65
+01:209C 73
+01:209D 6C
+01:209E 61
+01:209F FE              	    18: .byte 0xFE, 0x45, 0x54
+01:20A0 45
+01:20A1 54
+01:20A2 34              	    19: .byte "4", ".", " ", "E", "i", "n", "s", "t", "e", "i", "n"
+01:20A3 2E
+01:20A4 20
+01:20A5 45
+01:20A6 69
+01:20A7 6E
+01:20A8 73
+01:20A9 74
+01:20AA 65
+01:20AB 69
+01:20AC 6E
+01:20AD 00              	    20: .byte 0
 
 Source: "LCD.asm"
-                        	   177: ; put data or whatever here
-                        	   178: ; .include "file.txt" or something
+                        	   264: 
+                        	   265: .org 0x9000
+                        	   266: .include "answers.txt" ; file including answer keys
+
+Source: "answers.txt"
+02:9000 FE              	     1: .byte 0b11111110
+02:9001 FD              	     2: .byte 0b11111101
+
+Source: "LCD.asm"
+                        	   267: ; put data or whatever here
+                        	   268: ; .include "file.txt" or something
 
 
 Symbols by name:
-byte_send                        A:0253
-clear_decimal_mode               A:0297
-clk_cycle                        A:0273
+answerAddressByte1               S:0051
+answerAddressByte2               S:0052
+byte_send                        A:02E1
+check_answer                     A:024A
+clear_decimal_mode               A:0325
+clk_cycle                        A:0301
 dataCount                        S:0040
-delay                            A:02B4
-display_letter                   A:0233
-end                              A:0242
-inner_loop                       A:02B8
+delay                            A:034C
+display_letter                   A:02C0
+end                              A:02CF
+finish                           A:025B
+inner_loop                       A:0350
+inputKIM                         S:1702
+inputSettings                    S:1703
 main                             A:0200
-make_output                      A:029D
-outer_loop                       A:02B6
+make_input                       A:0335
+make_output                      A:0330
+no_carry                         A:026A
+outer_loop                       A:034E
 output                           S:1000
 outputKIM                        S:1700
 outputSettings                   S:1701
 pageAddressByte1                 S:0041
 pageAddressByte2                 S:0042
-send                             A:0222
-send_a                           A:02AD
-send_output                      A:0265
-set_clk_high                     A:025B
-set_counter                      A:0263
-set_cs_high                      A:028E
-set_cs_low                       A:0253
-set_initial_output_state         A:0298
-set_low                          A:02A2
+send                             A:0228
+send_a                           A:0345
+send_output                      A:02F3
+set_clk_high                     A:02E9
+set_counter                      A:02F1
+set_cs_high                      A:031C
+set_cs_low                       A:02E1
+set_initial_input_state          A:032B
+set_initial_output_state         A:0326
+set_low                          A:033A
 set_up                           A:0203
-setup                            A:0297
+setup                            A:0325
+show_answer_right                A:026E
+show_answer_wrong                A:0292
+userAnswer                       S:0050
+wait_for_answer                  A:0241
+wait_for_input                   A:022F
+wait_for_release                 A:0236
+wrong_answer                     A:0258
 
 Symbols by value:
 0040 dataCount
 0041 pageAddressByte1
 0042 pageAddressByte2
+0050 userAnswer
+0051 answerAddressByte1
+0052 answerAddressByte2
 0200 main
 0203 set_up
-0222 send
-0233 display_letter
-0242 end
-0253 set_cs_low
-0253 byte_send
-025B set_clk_high
-0263 set_counter
-0265 send_output
-0273 clk_cycle
-028E set_cs_high
-0297 clear_decimal_mode
-0297 setup
-0298 set_initial_output_state
-029D make_output
-02A2 set_low
-02AD send_a
-02B4 delay
-02B6 outer_loop
-02B8 inner_loop
+0228 send
+022F wait_for_input
+0236 wait_for_release
+0241 wait_for_answer
+024A check_answer
+0258 wrong_answer
+025B finish
+026A no_carry
+026E show_answer_right
+0292 show_answer_wrong
+02C0 display_letter
+02CF end
+02E1 set_cs_low
+02E1 byte_send
+02E9 set_clk_high
+02F1 set_counter
+02F3 send_output
+0301 clk_cycle
+031C set_cs_high
+0325 setup
+0325 clear_decimal_mode
+0326 set_initial_output_state
+032B set_initial_input_state
+0330 make_output
+0335 make_input
+033A set_low
+0345 send_a
+034C delay
+034E outer_loop
+0350 inner_loop
 1000 output
 1700 outputKIM
 1701 outputSettings
+1702 inputKIM
+1703 inputSettings

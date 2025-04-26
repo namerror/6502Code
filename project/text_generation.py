@@ -62,6 +62,66 @@ Q: Who invented the telephone?
 2. Alexander Graham Bell
 3. Nikola Tesla
 4. Einstein
+---
+Q: Who's the Goat?
+---
+1. Messi
+2. Ronaldo
+3. Neymar
+4. Antony
+---
+Q: What is the capital of Australia?
+---
+1. Sydney
+2. Sweeney
+3. Canberra
+4. Melbourne
+---
+Q: What planet is
+known as the Red
+Planet?
+---
+1. Earth
+2. Mars
+3. Venus
+4. Jupiter
+---
+Q: What is the
+largest ocean on
+Earth?
+---
+1. Atlantic
+2. Pacific
+3. Indian
+4. Arctic
+---
+Q: Who wrote the
+play "Romeo and
+Juliet"?
+---
+1. Dickens
+2. Tolkien
+3. Shakespeare
+4. Hemingway
+---
+Q: What gas do
+plants absorb from
+the atmosphere?
+---
+1. Oxygen
+2. Carbon Dioxide
+3. Nitrogen
+4. Hydrogen
+---
+Q: Which element has
+the chemical symbol
+'Au'?
+---
+1. Silver
+2. Gold
+3. Iron
+4. Copper
+
 """
 
     output_code = generate_kim1_lcd_pages_manual(example_text)

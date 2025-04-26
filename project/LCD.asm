@@ -33,13 +33,7 @@ main:
         LDA #0x41
         JSR send_a
 
-        ; send data to clear screen
-        LDA #0xFE
-        JSR send_a
-        LDA #0x51
-        JSR send_a
-
-        JSR delay
+        JSR clear_screen
 
 
     LDA #0x00
@@ -59,10 +53,11 @@ main:
         LDA inputKIM
         CMP #0xFF
         BEQ wait_for_input ; keep looping until there's a button pressed
-        wait_for_release:
-        CMP #0xFF
-        BNE wait_for_release ; need to release the button if pressed
-    
+        JSR delay
+        JSR delay ; give user time
+
+    JSR clear_screen
+
     ; show option page that comes after the question page
     LDA #0xFF 
     STA dataCount
@@ -71,30 +66,47 @@ main:
     wait_for_answer:
         LDA inputKIM
         CMP #0xFF
-        BEQ wait_for_input ; keep looping until there's a button pressed
+        BEQ wait_for_answer ; keep looping until there's a button pressed
         STA userAnswer ; saves user's answer the moment a button is pressed
+        JSR delay
         check_answer:
             LDY #0
             LDA (answerAddressByte1), Y ; load answer key
             CMP userAnswer
             BNE wrong_answer
+            JSR clear_screen
             JSR show_answer_right
-            JMP finish
+            JMP wait_for_finish
             wrong_answer:
+            JSR clear_screen
             JSR show_answer_wrong
+        wait_for_finish:
+            LDA inputKIM
+            CMP #0xFF
+            BEQ wait_for_finish ; keep looping until there's a button pressed
+            JSR delay
+            JSR delay ; give user time
         finish:
-            JSR delay
-            JSR delay
             JSR delay
             INC answerAddressByte1
             BNE no_carry
             INC answerAddressByte2
             no_carry:
+            JSR clear_screen
             JMP send
 
     BRK
 
     # 0x1C
+
+clear_screen:
+    ; send data to clear screen
+    LDA #0xFE
+    JSR send_a
+    LDA #0x51
+    JSR send_a
+    JSR delay
+    RTS
 
 show_answer_right:
     LDA #'C'
@@ -219,7 +231,7 @@ setup: ; setup subroutine
         STA outputKIM
     
     set_initial_input_state:
-        LDA #0x00
+        LDA #0xFF
         STA inputKIM
     
     make_output: ; make port A an output
